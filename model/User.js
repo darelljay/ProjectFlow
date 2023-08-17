@@ -7,7 +7,9 @@ const userSchema = new mongoose.Schema({
   password:String,
   phoneNumber:String,
   friends: [String],
+  freindRequests:[String],
   pendingRequests: [String],
+  requestResultMessege:[String],
   primaryLanguage:String,
   SecondaryLanguage:[String],
 });
