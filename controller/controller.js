@@ -110,7 +110,7 @@ export const logout = async (req, res) => {
 };
 
 // Friend Request method
-export const friend_request = async (req, res) => {
+export const send_friend_request = async (req, res) => {
   try {
     const { recipient } = req.body;
     const sender = await User.findOne({ id: req.session.user.id });
@@ -123,21 +123,21 @@ export const friend_request = async (req, res) => {
     if (!recipientUser) {
       return res.status(400).json({ message: 'Recipient user not found' });
     }
-
-    const alreadySentRequest = sender.pendingRequests.includes(recipient);
+  console.log(sender)
+    const alreadySentRequest = sender.sentFriendRequests.includes(recipient);
     const alreadyFriends = sender.friends.includes(recipient);
 
     if (!alreadySentRequest && !alreadyFriends) {
       // Update sender's pendingRequests
       await sender.updateOne(
         { id: req.session.user.id },
-        { $addToSet: { pendingRequests: recipient } }
+        { $addToSet: {sentFriendRequests:recipient} }
       );
 
       // Update recipient's friendRequests
       await recipientUser.updateOne(
         { id: recipient },
-        { $addToSet: { friendRequests: req.session.user.id } }
+        { $addToSet: {receivedFriendRequest: req.session.user.id } }
       );
 
       res.status(200).json({ message: 'Friend Request Sent' });
@@ -148,54 +148,76 @@ export const friend_request = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'An error occurred' });
+    res.status(500).json({ messege: 'An error occurred' });
   }
 };
 
+// project_invitation method 
+export const send_project_invitation = async(req,res) =>{
+    const {ProjectName,owner,recipient} = req.body;
+try{
+  await User.updateMany(
+     {id:recipient},
+     {$addToSet:{pendingRequests:{ProjectInvitation:`${owner}님 께서 ${ProjectName} 프로젝트에 초대하셧습니다. 요청을 수락하시겠습니까?`}}}
+   );
+   res.status(200).json({messege:"invitation Sent"});
+}catch(error){
+  res.status(500).json({messege:"An Error occurred while sending the invitation"});
+}
+}
 
-// approveFriendRequest method 
-export const approveFriendRequest = async(req,res) =>{
+
+// approve friend request
+export const approveFriendRequest = async (req, res) => { 
   try {
-    const {recipient,approve,sender} = req.body;
-    
-    if(approve){
-      await User.updateMany(
-        {id:recipient},
-        {
-          $addToSet:{friends:[sender]},
-          $pull:{friendRequests:sender}
-        }
-      )
-    
-    await User.updateMany(
-      {id:sender},
-      {
-        $pull:{pendingRequests:recipient},
-        $addToSet:{friends:[recipient]},
-        $set:{requestResultMessege:[`${recipient}님 께서 친구요청을 수락하셧습니다.`]}
-      }
-      );
-      res.status(200).json("Added to friend")  
-    }else{
-      await User.updateMany(
-        {id:recipient},
-        {
-          $pull:{freindRequests:sender},
-        }
-      )
+    const { recipient, approve, sender } = req.body;
 
+    if (approve === "true") {
+      // Update recipient's friends and pending requests
       await User.updateMany(
-        {id:sender},
+        { id: recipient },
         {
-          $pull:{pendingRequests:recipient},
-          $addToSet:{requestResultMessege:[`${recipient}님 꼐서 친구요청을 거절하셧습니다.`]}
+          $addToSet: { friends: sender },
+          $pull: { receivedFriendRequest: sender }
         }
-      )
-    }   
+      );
+
+      // Update sender's pending requests and friends
+      await User.updateMany(
+        { id: sender },
+        {
+          $pull: { sentFriendRequests: recipient },
+          $addToSet: { friends: recipient },
+          $set: { requestResultMessage: [`${recipient}님 께서 친구요청을 수락하셨습니다.`] }
+        }
+      );
+
+      res.status(200).json("Added to friend");
+    } else {
+      // Update recipient's friend requests
+      await User.updateMany(
+        { id: recipient },
+        {
+          $pull: { receivedFriendRequest: sender }
+        }
+      );
+
+      // Update sender's pending requests and request result message
+      await User.updateMany(
+        { id: sender },
+        {
+          $pull: { sentFriendRequests: recipient },
+          $addToSet: { requestResultMessage: [`${recipient}님 께서 친구요청을 거절하셨습니다.`] }
+        }
+      );
+
+      res.status(200).json("Friend request declined");
+    }
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "An error occurred while accepting friend request" });
   }
-}
+};
 
 // Project Creating method
 export const create_project = async (req, res) => {

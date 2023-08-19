@@ -38,6 +38,6 @@ app.use("/",router);
 app.use("/autherized",authRoute);
 app.set("port", process.env.PORT);
 
-app.listen(app.get('port'),()=>{
+app.listen(app.get('port'),()=>{  
     console.log(`server is runnig on port ${process.env.PORT}`);
 });
