@@ -109,6 +109,7 @@ export const logout = async (req, res) => {
   }
 };
 
+
 // Friend Request method
 export const send_friend_request = async (req, res) => {
   try {
@@ -123,23 +124,22 @@ export const send_friend_request = async (req, res) => {
     if (!recipientUser) {
       return res.status(400).json({ message: 'Recipient user not found' });
     }
-  console.log(sender)
     const alreadySentRequest = sender.sentFriendRequests.includes(recipient);
     const alreadyFriends = sender.friends.includes(recipient);
+
+    console.log(alreadySentRequest);
+    console.log(alreadyFriends);
 
     if (!alreadySentRequest && !alreadyFriends) {
       // Update sender's pendingRequests
       await sender.updateOne(
-        { id: req.session.user.id },
-        { $addToSet: {sentFriendRequests:recipient} }
-      );
+        { $set: {sentFriendRequests:recipient} }
+      )
 
       // Update recipient's friendRequests
       await recipientUser.updateOne(
-        { id: recipient },
-        { $addToSet: {receivedFriendRequest: req.session.user.id } }
+        { $set: {receivedFriendRequest: req.session.user.id } }
       );
-
       res.status(200).json({ message: 'Friend Request Sent' });
     } else if (alreadySentRequest) {
       res.status(400).json({ message: 'Request Already Sent' });
@@ -152,6 +152,7 @@ export const send_friend_request = async (req, res) => {
   }
 };
 
+
 // project_invitation method 
 export const send_project_invitation = async(req,res) =>{
     const {ProjectName,owner,recipient} = req.body;
@@ -163,9 +164,8 @@ try{
    res.status(200).json({messege:"invitation Sent"});
 }catch(error){
   res.status(500).json({messege:"An Error occurred while sending the invitation"});
+  }
 }
-}
-
 
 // approve friend request
 export const approveFriendRequest = async (req, res) => { 
@@ -242,6 +242,25 @@ export const create_project = async (req, res) => {
   }
 };
 
+export const assign_role = async (req,res)=>{
+  try{
+    const {owner,member_id,role} = req.body;
+
+    const Owner = Project.find({owner:owner});
+
+    if(!Owner){
+      res.status(400).json({messege:"An error occurred while searching this Project Please check if it still exists "});
+    }else if(!Owner.members.includes(member_id)){
+      res.status(400).json({messege:"User Not Found"});
+    }else{
+      
+    } 
+
+  }catch(error){
+    console.error(error);
+  }
+}
+
 // Send Project
 export const get_project = async (req, res) => {
   try {
@@ -257,3 +276,15 @@ export const get_project = async (req, res) => {
       .json({ messege: "An error occurred while processing your request" });
   }
 };
+
+export const search_users = async (req,res)=>{
+  try{
+    const {requested_user} = req.body; 
+    const findUser = await User.find({id:requested_user});
+
+    res.status(200).json({user:findUser});
+  }catch(error){
+    console.error(error);
+    res.status(500).json({ messege: "An error occurred while processing your request" });
+  }
+}
