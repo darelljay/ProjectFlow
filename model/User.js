@@ -10,10 +10,15 @@ const userSchema = new mongoose.Schema({
   receivedFriendRequest:[String],
   sentFriendRequests: [String],
   sentProjectInvites:[String],
-  receivedProjectInvites:[String],
+  receivedProjectInvites:[
+    {
+      title: String,
+      owner: String,
+      description: String,
+    }],
   sentProjectJoinRequests:[String],
   receivedProjectJoinRequests:[String],
-  requestResultMessege:[String],
+  requestResultMessege:[],
   primaryLanguage:String,
   SecondaryLanguage:[String],
 });

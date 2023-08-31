@@ -219,6 +219,40 @@ export const approveFriendRequest = async (req, res) => {
   }
 };
 
+// Project invitation method 
+export const invite_to_project = async(req,res) =>{
+  try{
+    const {title,invitee} = req.body; 
+
+    const my_Project =await Project.findOne({title}); // get the owners Project to check if Project Exists
+
+    const Invitee = await User.findOne({id:invitee}); // get the invitee's info 
+    
+
+    // check if the Project exists
+    if(!my_Project){
+      res.status(400).json({messege:"Project Not Found please check if it exits"});
+    }else if (!Invitee){
+      // check if invitee exists
+      res.status(400).json({messege:'The User You Invited Does Not Exist'});
+    }else if((Invitee.receivedProjectInvites.some(invite => invite.title === title))){
+      // check if invitation is already sent 
+      res.status(400).json({messege:'You Alredy Sent An Invitation'});
+    }else{
+ // If the Project exists, invitee exists, and invitation hasn't been sent yet      Invitee.receivedProjectInvites.push({ owner: my_Project.owner, description: my_Project.description, title: title });
+      await Invitee.save();
+      
+      return res.status(200).json({ message: "Invitation Sent" });
+  }
+  }catch(error){
+    res
+      .status(500)
+      .json({ messege: "An error occurred while processing your request" });
+    console.error(error)
+  }
+}
+
+
 // Project Creating method
 export const create_project = async (req, res) => {
   const { title, description, deadline, Public, team } = req.body;
@@ -242,20 +276,50 @@ export const create_project = async (req, res) => {
   }
 };
 
+
+export const  accept_project_offer = async(req,res) =>{
+  try{
+    const {accept} = req.body;
+
+    const user_id = req.session.user.id;
+
+    const Invitee_user = await User.findOne({user_id});
+
+    const Project = await Project.find(Invitee_user.receivedProjectInvites.title);
+    
+    console.log(await Project);
+    // if(accept){
+    // }
+
+  }catch(error){
+    console.error(error)
+  }
+}
+
+
 export const assign_role = async (req,res)=>{
   try{
-    const {owner,member_id,role} = req.body;
+    const {owner,member_id,role,description,deadline,tasks} = req.body;
 
     const Owner = Project.find({owner:owner});
-
+    
     if(!Owner){
       res.status(400).json({messege:"An error occurred while searching this Project Please check if it still exists "});
     }else if(!Owner.members.includes(member_id)){
       res.status(400).json({messege:"User Not Found"});
     }else{
-      
-    } 
+      Task.create({
+        title:Owner.title,
+        memberId:member,
+        description:description,
+        deadline:deadline,
+        tasks:[tasks],
+        role:role
 
+      }).then((result)=>{
+        res.status(201).json(result);
+      });
+    } 
   }catch(error){
     console.error(error);
   }
