@@ -39,5 +39,5 @@ app.use("/autherized",authRoute);
 app.set("port", process.env.PORT);
 
 app.listen(app.get('port'),()=>{  
-    console.log(`server is runnig on port ${process.env.PORT}`);
+    console.log(`server is runnig on port ${process.env.PORT}.`);
 });
