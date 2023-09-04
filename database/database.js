@@ -3,6 +3,7 @@ dotenv.config();
 import mongoose from "mongoose"
 
 // connetcting to MongoDB database
+
 try {
     const connection = mongoose.connection;
     connection.once("open", () => {
