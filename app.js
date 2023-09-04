@@ -2,7 +2,7 @@ import dotenv from "dotenv"
 dotenv.config();
 import express from "express";
 import bodyParser  from "body-parser";
-import './database.js';
+import './database/database.js';
 import cors from "cors";
 import helmet from "helmet";
 import router from "./routes/route.js";

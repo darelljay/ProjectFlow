@@ -7,7 +7,7 @@ const taskSchema = new mongoose.Schema({
   description: String,
   deadline: Date,
   status: String,
-  project: String,
+  tasks:[String],
   role:String
 });
 
